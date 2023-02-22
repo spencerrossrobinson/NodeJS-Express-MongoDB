@@ -18,7 +18,7 @@ MongoClient.connect(url, { useUnifiedTopology: true })
         console.log("Dropped Collection:", result);
       })
       //Will drop the collection if it does no exist
-      .catch((err) => console.log("No collection to drop."));
+      .catch((err) => console.log("No collectsion to drop."));
     //Will respond with error if no colletion to drop
 
     //now each previous callback is waiting on a promise to be fulfilled before running so we dont ahve async callbacks running out of place. each one hits a blocker and waits for the one before it to run
