@@ -14,14 +14,16 @@ connect.then(() => {
   console.log("Connected correctly to server");
 
   //passing in a object that will fill Campsite model
-  const newCampsite = new Campsite({
+  //const newCampsite = new Campsite
+
+  //different way to get same result
+  Campsite.create({
     name: "React Lake Campground",
     description: "test",
-  });
+  })
 
-  newCampsite
     //mongoose method that saves doc to database
-    .save()
+    // .save()
     .then((campsite) => {
       console.log(campsite);
       return Campsite.find();
