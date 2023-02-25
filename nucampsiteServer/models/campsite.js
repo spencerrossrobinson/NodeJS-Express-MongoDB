@@ -59,7 +59,8 @@ const campsiteSchema = new Schema(
       type: Boolean,
       default: false,
     },
-    //this will cause every campsite doc to contain multiple comment docs stored within an array
+    //this will cause every campsite doc to contain multiple comment docs stored within an array,
+    //nested schema for comment field
     comments: [commentSchema],
   },
   {

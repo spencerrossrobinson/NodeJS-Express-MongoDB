@@ -1,54 +1,88 @@
 const express = require("express");
+const Promotion = require("../models/promotion");
 const promotionRouter = express.Router();
 
 promotionRouter
   .route("/")
 
-  .all((req, res, next) => {
-    res.statusCode = 200;
-    res.setHeader("Content-Type", "text/plain");
-    next();
+  .get((req, res, next) => {
+    //replaces all method
+    Promotion.find()
+      //then statement represents success
+      //promotions representing multiple promotions
+      .then((promotions) => {
+        //can string status and json together, json already formats with content type and header so its redundant
+        res.status(200).json(promotions);
+      })
+      .catch((err) => next(err));
   })
-  .get((req, res) => {
-    res.end("Will send all the promotions to you");
+  .post((req, res, next) => {
+    //req.body represents payload
+    Promotion.create(req.body)
+      //singular promotion since we are only creating one at a time
+      .then((promotion) => {
+        res.status(200).json(promotion);
+      })
+      .catch((err) => next(err));
   })
-  .post((req, res) => {
-    res.end(
-      `Will add the promotion: ${req.body.name} with description: ${req.body.description}`
-    );
-  })
+  //Not supported
   .put((req, res) => {
     res.statusCode = 403;
     res.end("PUT operation not supported on /promotions");
   })
-  .delete((req, res) => {
-    res.end("Deleting all promotions");
+
+  .delete((req, res, next) => {
+    //deleteMany() deletes all info entered
+    Promotion.deleteMany()
+      .then((promotions) => {
+        //sending back all promotions we deleted
+        res.status(200).json(promotions);
+      })
+      .catch((err) => next(err));
   });
 
 promotionRouter
   .route("/:promotionId")
 
-  .all((req, res, next) => {
-    res.statusCode = 200;
-    res.setHeader("Content-Type", "text/plain");
-    next();
+  .get((req, res, next) => {
+    //taking stored route paramter and matching it to findById
+    Promotion.findById(req.params.promotionId)
+      //singular for a single promotion
+      .then((promotion) => {
+        res.status(200).json(promotion);
+      })
+      .catch((err) => next(err));
   })
-  .get((req, res) => {
-    res.end(
-      `Will send you details of the promotion: ${req.params.promotionId}`
-    );
-  })
+  //not supported
   .post((req, res) => {
     res.statusCode = 403;
     res.end("POST operation not suppoted");
   })
-  .put((req, res) => {
-    res.end(
-      `Will update the promotion: ${req.body.name} and description ${req.body.description}`
-    );
+
+  .put((req, res, next) => {
+    //takes the params Id and an Object with a payload
+    Promotion.findByIdAndUpdate(
+      req.params.promotionId,
+      {
+        //defines the payload
+        //$set will replace everything that follows and we can customize wont will be replaced
+        $set: req.body,
+      },
+      //without new true it wont return the json data back to the client
+      { new: true }
+    )
+      .then((promotion) => {
+        res.status(200).json(promotion);
+      })
+      .catch((err) => next(err));
   })
-  .delete((req, res) => {
-    res.end(`Deleting promotion: ${req.params.promotionId}`);
+  .delete((req, res, next) => {
+    //takes a parameter of the promotionId we want to delte
+    Promotion.findByIdAndDelete(req.params.promotionId)
+      .then((promotion) => {
+        res.status(200).json(promotion);
+      })
+      .catch((err) => next(err));
   });
 
 module.exports = promotionRouter;

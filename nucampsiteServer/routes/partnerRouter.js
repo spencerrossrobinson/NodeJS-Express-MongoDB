@@ -1,52 +1,88 @@
 const express = require("express");
+const Partner = require("../models/partner");
 const partnerRouter = express.Router();
 
 partnerRouter
   .route("/")
 
-  .all((req, res, next) => {
-    res.statusCode = 200;
-    res.setHeader("Content-Type", "text/plain");
-    next();
+  .get((req, res, next) => {
+    //replaces all method
+    Partner.find()
+      //then statement represents success
+      //partners representing multiple partners
+      .then((partners) => {
+        //can string status and json together, json already formats with content type and header so its redundant
+        res.status(200).json(partners);
+      })
+      .catch((err) => next(err));
   })
-  .get((req, res) => {
-    res.end("Will send all the partners to you");
+  .post((req, res, next) => {
+    //req.body represents payload
+    Partner.create(req.body)
+      //singular partner since we are only creating one at a time
+      .then((partner) => {
+        res.status(200).json(partner);
+      })
+      .catch((err) => next(err));
   })
-  .post((req, res) => {
-    res.end(
-      `Will add the partner: ${req.body.name} with description: ${req.body.description}`
-    );
-  })
+  //Not supported
   .put((req, res) => {
     res.statusCode = 403;
     res.end("PUT operation not supported on /partners");
   })
-  .delete((req, res) => {
-    res.end("Deleting all partners");
+
+  .delete((req, res, next) => {
+    //deleteMany() deletes all info entered
+    Partner.deleteMany()
+      .then((partners) => {
+        //sending back all partners we deleted
+        res.status(200).json(partners);
+      })
+      .catch((err) => next(err));
   });
 
 partnerRouter
   .route("/:partnerId")
 
-  .all((req, res, next) => {
-    res.statusCode = 200;
-    res.setHeader("Content-Type", "text/plain");
-    next();
+  .get((req, res, next) => {
+    //taking stored route paramter and matching it to findById
+    Partner.findById(req.params.partnerId)
+      //singular for a single partner
+      .then((partner) => {
+        res.status(200).json(partner);
+      })
+      .catch((err) => next(err));
   })
-  .get((req, res) => {
-    res.end(`Will send you details of the partner: ${req.params.partnerId}`);
-  })
+  //not supported
   .post((req, res) => {
     res.statusCode = 403;
     res.end("POST operation not suppoted");
   })
-  .put((req, res) => {
-    res.end(
-      `Will update the partner: ${req.body.name} and description ${req.body.description}`
-    );
+
+  .put((req, res, next) => {
+    //takes the params Id and an Object with a payload
+    Partner.findByIdAndUpdate(
+      req.params.partnerId,
+      {
+        //defines the payload
+        //$set will replace everything that follows and we can customize wont will be replaced
+        $set: req.body,
+      },
+      //without new true it wont return the json data back to the client
+      { new: true }
+    )
+      .then((partner) => {
+        res.status(200).json(partner);
+      })
+      .catch((err) => next(err));
   })
-  .delete((req, res) => {
-    res.end(`Deleting partner: ${req.params.partnerId}`);
+  .delete((req, res, next) => {
+    //takes a parameter of the partnerId we want to delte
+    Partner.findByIdAndDelete(req.params.partnerId)
+      .then((partner) => {
+        res.status(200).json(partner);
+      })
+      .catch((err) => next(err));
   });
 
 module.exports = partnerRouter;
