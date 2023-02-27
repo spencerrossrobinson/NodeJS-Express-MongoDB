@@ -39,6 +39,39 @@ app.use(logger("dev"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
+
+function auth(req, res, next) {
+  console.log(req.headers);
+  const authHeader = req.headers.authorization;
+  if (!authHeader) {
+    //if authHeader is null returning a error message to let the client know they are not authenticated
+    const err = new Error("You are not authenticated!");
+    //this lets the client know the server is req authentication and the authentication is Basic
+    res.setHeader("WWW-Authenticate", "Basic");
+    //err code status
+    err.status = 401;
+    return next(err);
+  }
+  //buffer comes with node, from is static and used to decode username and password
+  //split and toString belong to vanilla javascript
+
+  const auth = Buffer.from(authHeader.split(" ")[1], "base64")
+    .toString()
+    .split(":");
+  const user = auth[0];
+  const pass = auth[1];
+  if (user === "admin" && pass === "password") {
+    return next(); //authorized
+  } else {
+    //if not authorized returns error and trys authorization again
+    const err = new Error("You are not authenticated!");
+    res.setHeader("WWW-Authenticate", "Basic");
+    err.status = 401;
+    return next(err);
+  }
+}
+
+app.use(auth);
 app.use(express.static(path.join(__dirname, "public")));
 
 app.use("/", indexRouter);
