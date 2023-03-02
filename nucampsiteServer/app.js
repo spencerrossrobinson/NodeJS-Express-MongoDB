@@ -6,6 +6,8 @@ const logger = require("morgan");
 const session = require("express-session");
 //the require function is returning another function as return value, we immediately call that return function with the second argument session
 const FileStore = require("session-file-store")(session);
+const passport = require("passport");
+const authenticate = require("./authenticate");
 
 const indexRouter = require("./routes/index");
 const usersRouter = require("./routes/users");
@@ -56,14 +58,17 @@ app.use(
     store: new FileStore(),
   })
 );
+//these only necessary for session based authentication, checking for existing session, session data is loaded into req for req.user
+app.use(passport.initialize());
+app.use(passport.session());
 
 app.use("/", indexRouter);
 app.use("/users", usersRouter);
 
 function auth(req, res, next) {
-  console.log(req.session);
+  console.log(req.user);
   //signedCookies from cookie parser, will automatically parse signed cookie from req, if not properly signed will return false, user comes from us
-  if (!req.session.user) {
+  if (!req.user) {
     //if authHeader is null returning a error message to let the client know they are not authenticated
     const err = new Error("You are not authenticated!");
     //this lets the client know the server is req authentication and the authentication is Basic
@@ -90,15 +95,7 @@ function auth(req, res, next) {
     //   return next(err);
     // }
   } else {
-    //checks for signed cookie
-    if (req.session.user === "authenticated") {
-      return next();
-    } else {
-      // returns error if cookie is not signed and prompts for login
-      const err = new Error("You are not authenticated!");
-      err.status = 401;
-      return next(err);
-    }
+    return next();
   }
 }
 
