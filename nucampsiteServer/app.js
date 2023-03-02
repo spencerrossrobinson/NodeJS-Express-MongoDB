@@ -57,42 +57,41 @@ app.use(
   })
 );
 
+app.use("/", indexRouter);
+app.use("/users", usersRouter);
+
 function auth(req, res, next) {
   console.log(req.session);
   //signedCookies from cookie parser, will automatically parse signed cookie from req, if not properly signed will return false, user comes from us
   if (!req.session.user) {
-    const authHeader = req.headers.authorization;
-    if (!authHeader) {
-      //if authHeader is null returning a error message to let the client know they are not authenticated
-      const err = new Error("You are not authenticated!");
-      //this lets the client know the server is req authentication and the authentication is Basic
-      res.setHeader("WWW-Authenticate", "Basic");
-      //err code status
-      err.status = 401;
-      return next(err);
-    }
+    //if authHeader is null returning a error message to let the client know they are not authenticated
+    const err = new Error("You are not authenticated!");
+    //this lets the client know the server is req authentication and the authentication is Basic
+    //err code status
+    err.status = 401;
+    return next(err);
     //buffer comes with node, from is static and used to decode username and password
     //split and toString belong to vanilla javascript
 
-    const auth = Buffer.from(authHeader.split(" ")[1], "base64")
-      .toString()
-      .split(":");
-    const user = auth[0];
-    const pass = auth[1];
-    if (user === "admin" && pass === "password") {
-      //express knows to use secret cookie from cookie parser  to sign cookie
-      req.session.user = "admin";
-      return next(); //authorized
-    } else {
-      //if not authorized returns error and trys authorization again
-      const err = new Error("You are not authenticated!");
-      res.setHeader("WWW-Authenticate", "Basic");
-      err.status = 401;
-      return next(err);
-    }
+    // const auth = Buffer.from(authHeader.split(" ")[1], "base64")
+    //   .toString()
+    //   .split(":");
+    // const user = auth[0];
+    // const pass = auth[1];
+    // if (user === "admin" && pass === "password") {
+    //   //express knows to use secret cookie from cookie parser  to sign cookie
+    //   req.session.user = "admin";
+    //   return next(); //authorized
+    // } else {
+    //   //if not authorized returns error and trys authorization again
+    //   const err = new Error("You are not authenticated!");
+    //   res.setHeader("WWW-Authenticate", "Basic");
+    //   err.status = 401;
+    //   return next(err);
+    // }
   } else {
     //checks for signed cookie
-    if (req.session.user === "admin") {
+    if (req.session.user === "authenticated") {
       return next();
     } else {
       // returns error if cookie is not signed and prompts for login
@@ -106,8 +105,6 @@ function auth(req, res, next) {
 app.use(auth);
 app.use(express.static(path.join(__dirname, "public")));
 
-app.use("/", indexRouter);
-app.use("/users", usersRouter);
 app.use("/campsites", campsiteRouter);
 app.use("/promotions", promotionRouter);
 app.use("/partners", partnerRouter);
