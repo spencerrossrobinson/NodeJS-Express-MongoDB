@@ -11,25 +11,36 @@ router.get("/", function (req, res, next) {
 });
 
 router.post("/signup", (req, res) => {
-  //registering with passport
   User.register(
-    //new user created with name from client
     new User({ username: req.body.username }),
-    //second arg is password from incoming client req
     req.body.password,
-    //third arg is callback that will receive error if there was one or null if there was no error
-    (err) => {
-      //checking to see if there was an error
+    //adding in user to the params
+    (err, user) => {
       if (err) {
         res.statusCode = 500;
         res.setHeader("Content-Type", "application/json");
         res.json({ err: err });
       } else {
-        //if made it through then authentication proceeds
-        passport.authenticate("local")(req, res, () => {
-          res.statusCode = 200;
-          res.setHeader("Content-Type", "application/json");
-          res.json({ success: true, status: "Registration Successful!" });
+        //setting up check for firstname and lastname
+        if (req.body.firstname) {
+          user.firstname = req.body.firstname;
+        }
+        if (req.body.lastname) {
+          user.lastname = req.body.lastname;
+        }
+        //holy fucking refactoring jesus
+        user.save((err) => {
+          if (err) {
+            res.statusCode = 500;
+            res.setHeader("Content-Type", "application/json");
+            res.json({ err: err });
+            return;
+          }
+          passport.authenticate("local")(req, res, () => {
+            res.statusCode = 200;
+            res.setHeader("Content-Type", "application/json");
+            res.json({ success: true, status: "Registration Successful!" });
+          });
         });
       }
     }

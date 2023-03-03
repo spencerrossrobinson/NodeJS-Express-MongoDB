@@ -14,6 +14,8 @@ campsiteRouter
   .get((req, res, next) => {
     //this replaces the all method above
     Campsite.find()
+      //pop authors field with cooments sub doc that matches user doc object id
+      .populate("comments.author")
       .then((campsites) => {
         res.statusCode = 200;
         res.setHeader("Content-Type", "application/json");
@@ -66,6 +68,7 @@ campsiteRouter
   .get((req, res, next) => {
     //passing it the id stored in the route parameter, this id is being parsed by http request for whatever user put as id
     Campsite.findById(req.params.campsiteId)
+      .populate("comments.author")
       .then((campsite) => {
         //same as above
         res.statusCode = 200;
@@ -116,6 +119,7 @@ campsiteRouter
   .get((req, res, next) => {
     //looking for the specific campsite id
     Campsite.findById(req.params.campsiteId)
+      .populate("comments.author")
       .then((campsite) => {
         //check to see if campsite has been returned because it is possible for null to be returned as a value
         if (campsite) {
@@ -136,6 +140,8 @@ campsiteRouter
     Campsite.findById(req.params.campsiteId)
       .then((campsite) => {
         if (campsite) {
+          //ensures on save it carries the id of the author who submitted comment
+          req.body.author = req.user._id;
           //if campsite is returned push the new comment into the campsite and save it
           campsite.comments.push(req.body);
           //not a static method, it is being performed on just the info being edited
@@ -196,6 +202,7 @@ campsiteRouter
   //handles requests for a specific comment on a specific campsite
   .get((req, res, next) => {
     Campsite.findById(req.params.campsiteId)
+      .populate("comments.author")
       .then((campsite) => {
         //checking for both campsite and campsite.comments.id to be truthy
         if (campsite && campsite.comments.id(req.params.commentId)) {
