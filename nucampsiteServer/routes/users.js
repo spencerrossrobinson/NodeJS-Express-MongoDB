@@ -10,8 +10,14 @@ router.get(
   "/",
   authenticate.verifyUser,
   authenticate.verifyAdmin,
-  function (req, res, next) {
-    res.send("respond with a resource");
+  (req, res, next) => {
+    User.find()
+      .then((users) => {
+        res.statusCode = 200;
+        res.setHeader("Content-Type", "application/json");
+        res, josn(err);
+      })
+      .catch((err) => next(err));
   }
 );
 
