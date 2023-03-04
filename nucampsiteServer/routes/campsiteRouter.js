@@ -10,7 +10,6 @@ campsiteRouter
   //   res.statusCode = 200;
   //   res.setHeader("Content-Type", "text/plain");
   //   next();
-  // })
   .get((req, res, next) => {
     //this replaces the all method above
     Campsite.find()
@@ -248,23 +247,30 @@ campsiteRouter
       .then((campsite) => {
         //checks for two truthy values
         if (campsite && campsite.comments.id(req.params.commentId)) {
-          //two seperate if blocks make sure they both always get checked
-          //edits the rating on the comment
-          if (req.body.rating) {
-            campsite.comments.id(req.params.commentId).rating = req.body.rating;
+          if (campsite.comments.id(re.params.commentId).equals(req.user._id)) {
+            //two seperate if blocks make sure they both always get checked
+            //edits the rating on the comment
+            if (req.body.rating) {
+              campsite.comments.id(req.params.commentId).rating =
+                req.body.rating;
+            }
+            //edits the text on the comment
+            if (req.body.text) {
+              campsite.comments.id(req.params.commentId).text = req.body.text;
+            }
+            campsite
+              .save()
+              .then((campsite) => {
+                res.statusCode = 200;
+                res.setHeader("Content-Type", "application/json");
+                res.json(campsite);
+              })
+              .catch((err) => next(err));
+          } else {
+            err = new Error("You are not authorized to update this operation");
+            err.status = 403;
+            return next(err);
           }
-          //edits the text on the comment
-          if (req.body.text) {
-            campsite.comments.id(req.params.commentId).text = req.body.text;
-          }
-          campsite
-            .save()
-            .then((campsite) => {
-              res.statusCode = 200;
-              res.setHeader("Content-Type", "application/json");
-              res.json(campsite);
-            })
-            .catch((err) => next(err));
           //checks for error on campsite
         } else if (!campsite) {
           err = new Error(`Campsite ${req.params.campsiteId} not found`);
@@ -283,16 +289,22 @@ campsiteRouter
     Campsite.findById(req.params.campsiteId)
       .then((campsite) => {
         if (campsite && campsite.comments.id(req.params.commentId)) {
-          //similar to above, deletes specific comment iwth comment id and the saves empty comment
-          campsite.comments.id(req.params.commentId).remove();
-          campsite
-            .save()
-            .then((campsite) => {
-              res.statusCode = 200;
-              res.setHeader("Content-Type", "application/json");
-              res.json(campsite);
-            })
-            .catch((err) => next(err));
+          if (campsite.comments.id(re.params.commentId).equals(req.user._id)) {
+            //similar to above, deletes specific comment iwth comment id and the saves empty comment
+            campsite.comments.id(req.params.commentId).remove();
+            campsite
+              .save()
+              .then((campsite) => {
+                res.statusCode = 200;
+                res.setHeader("Content-Type", "application/json");
+                res.json(campsite);
+              })
+              .catch((err) => next(err));
+          } else {
+            err = new Error("You are not authorized to delete this operation");
+            err.status = 403;
+            return next(err);
+          }
         } else if (!campsite) {
           err = new Error(`Campsite ${req.params.campsiteId} not found`);
           err.status = 404;

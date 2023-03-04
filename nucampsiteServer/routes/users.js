@@ -15,7 +15,7 @@ router.get(
       .then((users) => {
         res.statusCode = 200;
         res.setHeader("Content-Type", "application/json");
-        res, josn(err);
+        res.json(users);
       })
       .catch((err) => next(err));
   }
