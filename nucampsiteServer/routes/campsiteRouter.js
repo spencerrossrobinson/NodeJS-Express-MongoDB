@@ -26,7 +26,7 @@ campsiteRouter
       .catch((err) => next(err));
     // res.end("Will send all the campsites to you");
   })
-  .post(authenticate.verifyUser, (req, res, next) => {
+  .post(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
     //creates a new campsite doc and saves it to mongodb server, mongoose checks and matches to schema that has been defined
     Campsite.create(req.body)
       //returns fulfilled promise with info of created campsite
@@ -44,17 +44,21 @@ campsiteRouter
     res.end("PUT operation not supported on /campsites");
   })
   //pass in next for err handling
-  .delete(authenticate.verifyUser, (req, res, next) => {
-    // deleteMany static will result in all docs in campsites being deleted
-    Campsite.deleteMany()
-      //response holds info on what has been deleted
-      .then((response) => {
-        res.statusCode = 200;
-        res.setHeader("Content-Type", "application/json");
-        res.json(response);
-      })
-      .catch((err) => next(err));
-  });
+  .delete(
+    authenticate.verifyUser,
+    authenticate.verifyAdmin,
+    (req, res, next) => {
+      // deleteMany static will result in all docs in campsites being deleted
+      Campsite.deleteMany()
+        //response holds info on what has been deleted
+        .then((response) => {
+          res.statusCode = 200;
+          res.setHeader("Content-Type", "application/json");
+          res.json(response);
+        })
+        .catch((err) => next(err));
+    }
+  );
 
 campsiteRouter
   .route("/:campsiteId")
@@ -84,7 +88,7 @@ campsiteRouter
       `POST operation not supported on /campsites/${req.params.campsiteId}`
     );
   })
-  .put(authenticate.verifyUser, (req, res, next) => {
+  .put(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
     //same function as above to find campsite by entered id
     Campsite.findByIdAndUpdate(
       req.params.campsiteId,
@@ -102,16 +106,20 @@ campsiteRouter
       })
       .catch((err) => next(err));
   })
-  .delete(authenticate.verifyUser, (req, res, next) => {
-    //very similar to delete above
-    Campsite.findByIdAndDelete(req.params.campsiteId)
-      .then((response) => {
-        res.statusCode = 200;
-        res.setHeader("Content-Type", "application/json");
-        res.json(response);
-      })
-      .catch((err) => next(err));
-  });
+  .delete(
+    authenticate.verifyUser,
+    authenticate.verifyAdmin,
+    (req, res, next) => {
+      //very similar to delete above
+      Campsite.findByIdAndDelete(req.params.campsiteId)
+        .then((response) => {
+          res.statusCode = 200;
+          res.setHeader("Content-Type", "application/json");
+          res.json(response);
+        })
+        .catch((err) => next(err));
+    }
+  );
 
 //setting up endpoints for campsiteId comments
 campsiteRouter
@@ -170,32 +178,36 @@ campsiteRouter
       `PUT operation not supported on /campsites/${req.params.campsiteId}/comments`
     );
   })
-  .delete(authenticate.verifyUser, (req, res, next) => {
-    Campsite.findById(req.params.campsiteId)
-      .then((campsite) => {
-        if (campsite) {
-          for (let i = campsite.comments.length - 1; i >= 0; i--) {
-            //we want to delete all comments so for loop will iterate through campsite deleting all comments until the id index hits 0
-            campsite.comments.id(campsite.comments[i]._id).remove();
+  .delete(
+    authenticate.verifyUser,
+    authenticate.verifyAdmin,
+    (req, res, next) => {
+      Campsite.findById(req.params.campsiteId)
+        .then((campsite) => {
+          if (campsite) {
+            for (let i = campsite.comments.length - 1; i >= 0; i--) {
+              //we want to delete all comments so for loop will iterate through campsite deleting all comments until the id index hits 0
+              campsite.comments.id(campsite.comments[i]._id).remove();
+            }
+            campsite
+              .save()
+              //saves the empty campsite comments
+              .then((campsite) => {
+                res.statusCode = 200;
+                res.setHeader("Content-Type", "application/json");
+                res.json(campsite);
+              })
+              .catch((err) => next(err));
+          } else {
+            //sets up error response
+            err = new Error(`Campsite ${req.params.campsiteId} not found`);
+            err.status = 404;
+            return next(err);
           }
-          campsite
-            .save()
-            //saves the empty campsite comments
-            .then((campsite) => {
-              res.statusCode = 200;
-              res.setHeader("Content-Type", "application/json");
-              res.json(campsite);
-            })
-            .catch((err) => next(err));
-        } else {
-          //sets up error response
-          err = new Error(`Campsite ${req.params.campsiteId} not found`);
-          err.status = 404;
-          return next(err);
-        }
-      })
-      .catch((err) => next(err));
-  });
+        })
+        .catch((err) => next(err));
+    }
+  );
 
 campsiteRouter
   .route("/:campsiteId/comments/:commentId")

@@ -17,7 +17,7 @@ promotionRouter
       })
       .catch((err) => next(err));
   })
-  .post(authenticate.verifyUser, (req, res, next) => {
+  .post(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
     //req.body represents payload
     Promotion.create(req.body)
       //singular promotion since we are only creating one at a time
@@ -32,15 +32,19 @@ promotionRouter
     res.end("PUT operation not supported on /promotions");
   })
 
-  .delete(authenticate.verifyUser, (req, res, next) => {
-    //deleteMany() deletes all info entered
-    Promotion.deleteMany()
-      .then((promotions) => {
-        //sending back all promotions we deleted
-        res.status(200).json(promotions);
-      })
-      .catch((err) => next(err));
-  });
+  .delete(
+    authenticate.verifyUser,
+    authenticate.verifyAdmin,
+    (req, res, next) => {
+      //deleteMany() deletes all info entered
+      Promotion.deleteMany()
+        .then((promotions) => {
+          //sending back all promotions we deleted
+          res.status(200).json(promotions);
+        })
+        .catch((err) => next(err));
+    }
+  );
 
 promotionRouter
   .route("/:promotionId")
@@ -60,7 +64,7 @@ promotionRouter
     res.end("POST operation not suppoted");
   })
 
-  .put(authenticate.verifyUser, (req, res, next) => {
+  .put(authenticate.verifyUser, authenticate.verifyAdmin, (req, res, next) => {
     //takes the params Id and an Object with a payload
     Promotion.findByIdAndUpdate(
       req.params.promotionId,
@@ -77,13 +81,17 @@ promotionRouter
       })
       .catch((err) => next(err));
   })
-  .delete(authenticate.verifyUser, (req, res, next) => {
-    //takes a parameter of the promotionId we want to delte
-    Promotion.findByIdAndDelete(req.params.promotionId)
-      .then((promotion) => {
-        res.status(200).json(promotion);
-      })
-      .catch((err) => next(err));
-  });
+  .delete(
+    authenticate.verifyUser,
+    authenticate.verifyAdmin,
+    (req, res, next) => {
+      //takes a parameter of the promotionId we want to delte
+      Promotion.findByIdAndDelete(req.params.promotionId)
+        .then((promotion) => {
+          res.status(200).json(promotion);
+        })
+        .catch((err) => next(err));
+    }
+  );
 
 module.exports = promotionRouter;
