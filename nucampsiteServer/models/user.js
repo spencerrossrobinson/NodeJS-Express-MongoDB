@@ -6,6 +6,7 @@ const Schema = mongoose.Schema;
 const userSchema = new Schema({
   //changing to just admin with use of passport
   //adding first and lastname values
+  facebookId: String,
   firstname: {
     type: String,
     default: "",
