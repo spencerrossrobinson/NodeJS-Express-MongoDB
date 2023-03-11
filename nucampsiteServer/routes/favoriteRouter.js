@@ -14,7 +14,6 @@ favoriteRouter
       .then((favorite) => res.status(200).json(favorite))
       .catch((err) => next(err));
   })
-
   .post(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
     Favorite.findOne({ user: req.user._id })
       .then((favorite) => {
@@ -23,23 +22,25 @@ favoriteRouter
             if (!favorite.campsites.includes(fav._id))
               favorite.campsites.push(fav._id);
           });
+
           favorite
             .save()
             .then((favorite) => res.status(200).json(favorite))
-            .catch((err = next(err)));
+            .catch((err) => next(err));
         } else {
           Favorite.create({ user: req.user._id })
             .then((favorite) => {
               req.body.forEach((fav) => favorite.campsites.push(fav._id));
+
               favorite
                 .save()
                 .then((favorite) => res.status(200).json(favorite))
-                .catch((err = next(err)));
+                .catch((err) => next(err));
             })
             .catch((err) => next(err));
         }
       })
-      .catch((err = next(err)));
+      .catch((err) => next(err));
   })
   .delete(cors.corsWithOptions, authenticate.verifyUser, (req, res, next) => {
     Favorite.findOneAndDelete({ user: req.user._id })
@@ -47,7 +48,7 @@ favoriteRouter
         if (favorite) {
           res.status(200).json(favorite);
         } else {
-          res.status(200).end("No favorite to delete here!");
+          res.status(200).end("No favorite to delete!");
         }
       })
       .catch((err) => next(err));
@@ -85,14 +86,12 @@ favoriteRouter
         if (favorite) {
           const index = favorite.campsites.indexOf(req.params.campsiteId);
 
-          if (index >= 0) {
-            favorite.campsites.splice(index, 1);
+          if (index >= 0) favorite.campsites.splice(index, 1);
 
-            favorite
-              .save()
-              .then((favorite) => res.status(200).json(favorite))
-              .catch((err) => next(err));
-          }
+          favorite
+            .save()
+            .then((favorite) => res.status(200).json(favorite))
+            .catch((err) => next(err));
         } else {
           res.status(200).end("No favorite to delete");
         }
